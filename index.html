@@ -568,7 +568,7 @@ async function attemptLogin() {
   btn.disabled = true;
 
   try {
-    const resp = await fetch('public/member_data.json');
+    const resp = await fetch('https://raw.githubusercontent.com/PiratesTreasure/pirate-dashboard/main/public/member_data.json');
     if (!resp.ok) throw new Error('Data not available yet — run the tracker first.');
     const raw = await resp.json();
 
