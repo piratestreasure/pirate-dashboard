@@ -651,7 +651,7 @@ function get24hAgoMember(uid) {
 
 function renderApp() {
   const members = appData.members || [];
-  const sorted  = [...members].sort((a,b) => (b.contribution_24h||0) - (a.contribution_24h||0));
+  const sorted  = [...members].sort((a,b) => (b.contribution_season||0) - (a.contribution_season||0));
 
   // Update header
   const dt = new Date(appData.updated_at);
@@ -707,6 +707,7 @@ function renderApp() {
             <th class="num">24h Deps</th>
             <th class="num">Season Contrib</th>
             <th class="num">Season Deps</th>
+            <th class="num">Last Season Contrib</th>
             <th>Last Login</th>
           </tr>
         </thead>
@@ -728,13 +729,17 @@ function renderApp() {
           <button class="metric-tab" onclick="setMetric('contribution_season', this)">Season Contribution</button>
         </div>
       </div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;letter-spacing:0.04em">
+        Each point = one hourly snapshot. Hourly data kept for 14 days, then downsampled to daily averages for up to 90 days.
+        Click any row in the leaderboard to jump to that member's chart.
+      </div>
       <div class="chart-box" style="height:320px">
         <canvas id="line-chart"></canvas>
       </div>
     </div>
 
     <!-- Bar charts row -->
-    <div class="section-title">📊 Alliance Snapshot</div>
+    <div class="section-title">📊 Alliance Snapshot — Season Contribution (left) · 24h Contribution (right)</div>
     <div class="charts-row">
       <div class="chart-box" style="height:320px">
         <canvas id="bar-chart-1"></canvas>
@@ -773,6 +778,7 @@ function renderLeaderboard(sorted) {
       <td class="num">${fmt(m.departures_24h)}</td>
       <td class="num">${fmt(m.contribution_season)}</td>
       <td class="num">${fmt(m.departures_season)}</td>
+      <td class="num" style="color:var(--muted)">${fmt(m.contribution_last_season || 0)}</td>
       <td style="color:var(--muted);font-size:0.8rem">${login}</td>
     </tr>`;
   }).join('');
@@ -832,7 +838,10 @@ function getMetricColor(metric) {
 function renderLineChart() {
   if (lineChart) { lineChart.destroy(); lineChart = null; }
   const uid     = parseInt(document.getElementById('member-select')?.value || activeUser);
-  const history = appData?.history || [];
+  const allHistory = appData?.history || [];
+  // Graph shows last 14 days only
+  const cutoff14d = Date.now() / 1000 - (14 * 86400);
+  const history   = allHistory.filter(s => s.timestamp >= cutoff14d);
   const labels  = history.map(s => {
     const d = new Date(s.timestamp * 1000);
     return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
@@ -873,7 +882,7 @@ function renderBarCharts(sorted) {
   const top10 = sorted.slice(0, 10);
   const names = top10.map(m => m.company_name.length > 18 ? m.company_name.slice(0,16)+'…' : m.company_name);
 
-  // Chart 1: 24h contribution
+  // Chart 1: Season contribution top 10
   if (barChart1) barChart1.destroy();
   const ctx1 = document.getElementById('bar-chart-1');
   if (ctx1) barChart1 = new Chart(ctx1, {
@@ -881,9 +890,9 @@ function renderBarCharts(sorted) {
     data: {
       labels: names,
       datasets: [{
-        label: '24h Contribution',
-        data: top10.map(m => m.contribution_24h || 0),
-        backgroundColor: top10.map((m,i) => i === 0 ? '#ffd700' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : '#2980b9'),
+        label: 'Season Contribution',
+        data: top10.map(m => m.contribution_season || 0),
+        backgroundColor: top10.map((m,i) => i === 0 ? '#ffd700' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : '#c9a84c'),
         borderRadius: 2,
       }]
     },
@@ -893,18 +902,18 @@ function renderBarCharts(sorted) {
     }
   });
 
-  // Chart 2: Season contribution
+  // Chart 2: 24h contribution top 10
   if (barChart2) barChart2.destroy();
-  const sortedSeason = [...sorted].sort((a,b) => (b.contribution_season||0) - (a.contribution_season||0)).slice(0,10);
+  const sorted24h = [...sorted].sort((a,b) => (b.contribution_24h||0) - (a.contribution_24h||0)).slice(0,10);
   const ctx2 = document.getElementById('bar-chart-2');
   if (ctx2) barChart2 = new Chart(ctx2, {
     type: 'bar',
     data: {
-      labels: sortedSeason.map(m => m.company_name.length > 18 ? m.company_name.slice(0,16)+'…' : m.company_name),
+      labels: sorted24h.map(m => m.company_name.length > 18 ? m.company_name.slice(0,16)+'…' : m.company_name),
       datasets: [{
-        label: 'Season Contribution',
-        data: sortedSeason.map(m => m.contribution_season || 0),
-        backgroundColor: '#f0b429',
+        label: '24h Contribution',
+        data: sorted24h.map(m => m.contribution_24h || 0),
+        backgroundColor: '#5dade2',
         borderRadius: 2,
       }]
     },
