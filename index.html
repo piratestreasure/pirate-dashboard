@@ -798,11 +798,15 @@ function renderApp() {
         <canvas id="bar-chart-2"></canvas>
       </div>
     </div>
+
+    <div class="section-title" style="margin-top:2rem">⚓ Port Rankings</div>
+    <div id="port-rankings-section" style="margin-top:1rem"></div>
   `;
 
   renderLeaderboard(sorted);
   renderLineChart();
   renderBarCharts(sorted);
+  renderPortRankings();
 }
 
 function renderLeaderboard(sorted) {
