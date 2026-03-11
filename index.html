@@ -395,32 +395,32 @@
   .range-tab:hover { border-color: var(--blue); color: var(--blue); }
   .range-tab.active { background: var(--blue); color: #0a0e1a; border-color: var(--blue); font-weight: 700; }
   .port-table { width:100%; border-collapse:collapse; font-size:0.95rem; }
-  .port-table th {
-    font-family:'Share Tech Mono',monospace; font-size:0.7rem;
-    letter-spacing:0.08em; color:var(--muted);
-    padding:8px 12px; text-align:left;
-    border-bottom:1px solid var(--border);
-    font-weight:400;
-  }
-  .port-table th.num { text-align:right; }
-  .port-table td { padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.03); }
-  .port-table td.num { text-align:right; font-family:'Share Tech Mono',monospace; font-size:0.85rem; }
-  .port-table tr:hover td { background:rgba(255,255,255,0.02); }
-  .port-rank-badge {
-    display:inline-block; width:22px; text-align:center;
-    font-family:'Share Tech Mono',monospace; font-size:0.75rem; color:var(--muted);
-  }
-  .port-tabs { display:flex; gap:6px; margin-bottom:1rem; flex-wrap:wrap; }
-  .port-tab {
-    font-family:'Share Tech Mono',monospace; font-size:0.7rem; letter-spacing:0.08em;
-    padding:5px 14px; border-radius:4px; border:1px solid var(--border);
-    background:transparent; color:var(--muted); cursor:pointer; transition:all 0.2s;
-  }
-  .port-tab:hover { border-color:var(--gold); color:var(--gold); }
-  .port-tab.active { background:var(--gold); color:var(--ink); border-color:var(--gold); font-weight:700; }
-  .rank-up { color:#34d399; font-size:0.75rem; }
-  .rank-down { color:#f87171; font-size:0.75rem; }
-  .rank-same { color:var(--muted); font-size:0.75rem; }
+  .port-table th { font-family:'Share Tech Mono',monospace; font-size:0.68rem; letter-spacing:0.1em; color:var(--muted); font-weight:400; padding:8px 14px; border-bottom:2px solid var(--border); text-align:left; cursor:pointer; user-select:none; }
+  .port-table th:hover { color:var(--gold); }
+  .port-table th.active-sort { color:var(--gold); }
+  .port-table td { padding:8px 14px; border-bottom:1px solid rgba(255,255,255,0.03); vertical-align:middle; }
+  .port-table tr:hover td { background:rgba(255,255,255,0.025); }
+  .rank-pill { display:inline-flex; align-items:center; justify-content:center; width:32px; height:22px; border-radius:3px; font-family:'Share Tech Mono',monospace; font-size:0.8rem; font-weight:700; }
+  .rank-1     { background:rgba(255,215,0,0.15);   color:#ffd700; }
+  .rank-2     { background:rgba(192,192,192,0.15); color:#c0c0c0; }
+  .rank-3     { background:rgba(205,127,50,0.15);  color:#cd7f32; }
+  .rank-top10 { background:rgba(52,211,153,0.1);   color:#34d399; }
+  .rank-mid   { background:rgba(56,189,248,0.1);   color:#38bdf8; }
+  .rank-low   { background:rgba(248,113,113,0.1);  color:#f87171; }
+  .compact-toggle { width:100%; margin-top:1rem; background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:0.8rem 1.2rem; display:flex; align-items:center; justify-content:space-between; cursor:pointer; transition:border-color 0.2s; font-family:'Share Tech Mono',monospace; font-size:0.75rem; color:var(--muted); letter-spacing:0.06em; }
+  .compact-toggle:hover { border-color:var(--gold); color:var(--gold); }
+  .compact-toggle .arrow { transition:transform 0.25s; }
+  .compact-toggle.open .arrow { transform:rotate(180deg); }
+  .compact-section { display:none; margin-top:0.5rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+  .compact-section.open { display:block; }
+  .compact-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); }
+  .compact-item { display:flex; align-items:center; gap:8px; padding:6px 12px; border-bottom:1px solid rgba(255,255,255,0.03); border-right:1px solid rgba(255,255,255,0.03); font-size:0.85rem; transition:background 0.12s; }
+  .compact-item:hover { background:rgba(255,255,255,0.025); }
+  .compact-rank { font-family:'Share Tech Mono',monospace; font-size:0.72rem; min-width:28px; text-align:center; }
+  .port-summary-row { display:flex; gap:1rem; margin-bottom:1.2rem; flex-wrap:wrap; }
+  .port-summary-card { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:0.65rem 1rem; min-width:90px; }
+  .port-summary-label { font-family:'Share Tech Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; color:var(--muted); margin-bottom:3px; }
+  .port-summary-value { font-size:1.2rem; font-weight:700; font-family:'Share Tech Mono',monospace; color:var(--gold); }
 
   .chart-box {
     background: var(--panel);
@@ -588,7 +588,7 @@ async function decryptPayload(encryptedB64, password) {
 let appData       = null;
 let activeUser    = null;
 let activeMetric  = 'contribution_24h';
-let activeRange   = 14;  // days shown in graph
+let activeRange   = 14;
 let lineChart     = null;
 let barChart1     = null;
 let barChart2     = null;
@@ -607,8 +607,7 @@ async function attemptLogin() {
   btn.disabled = true;
 
   try {
-    // Fetch port rankings in parallel
-  const [resp, portResp] = await Promise.all([
+    const [resp, portResp] = await Promise.all([
     fetch('https://raw.githubusercontent.com/PiratesTreasure/pirate-dashboard/main/public/member_data.json'),
     fetch('https://raw.githubusercontent.com/PiratesTreasure/pirate-dashboard/main/public/port_data.json').catch(() => null)
   ]);
@@ -776,14 +775,12 @@ function renderApp() {
         </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:0.8rem;color:var(--muted);letter-spacing:0.04em">
-          Each point = one hourly snapshot. Click any leaderboard row to jump to that member.
-        </div>
+        <div style="font-size:0.8rem;color:var(--muted);letter-spacing:0.04em">Each point = one hourly snapshot. Click any leaderboard row to jump to that member.</div>
         <div class="range-tabs">
-          <button class="range-tab active" onclick="setRange(1, this)">1D</button>
-          <button class="range-tab" onclick="setRange(3, this)">3D</button>
-          <button class="range-tab" onclick="setRange(7, this)">7D</button>
-          <button class="range-tab" onclick="setRange(14, this)">14D</button>
+          <button class="range-tab active" onclick="setRange(1,this)">1D</button>
+          <button class="range-tab" onclick="setRange(3,this)">3D</button>
+          <button class="range-tab" onclick="setRange(7,this)">7D</button>
+          <button class="range-tab" onclick="setRange(14,this)">14D</button>
         </div>
       </div>
       <div class="chart-box" style="height:320px">
@@ -801,13 +798,7 @@ function renderApp() {
         <canvas id="bar-chart-2"></canvas>
       </div>
     </div>
-
-    <!-- Port Rankings -->
-    <div class="section-title" style="margin-top:2rem">⚓ Port Rankings</div>
-    <div id="port-rankings-section" style="margin-top:1rem"></div>
   `;
-
-  renderPortRankings();
 
   renderLeaderboard(sorted);
   renderLineChart();
@@ -894,29 +885,13 @@ function getMetricColor(metric) {
   return { contribution_24h: '#5dade2', departures_24h: '#58d68d', contribution_season: '#f0b429' }[metric] || '#c9a84c';
 }
 
-function formatTimestamp(ts, rangedays) {
-  const d = new Date(ts * 1000);
-  const pad = n => n.toString().padStart(2,'0');
-  if (rangedays <= 1) {
-    // 1D: show HH:MM only
-    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  } else if (rangedays <= 3) {
-    // 3D: show Mon HH:MM
-    return `${d.toLocaleDateString('en-GB',{weekday:'short'})} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  } else {
-    // 7D / 14D: show DD/MM at midnight only, else HH:MM
-    if (d.getHours() === 0) return `${pad(d.getDate())}/${pad(d.getMonth()+1)}`;
-    return `${pad(d.getHours())}:00`;
-  }
-}
-
 function renderLineChart() {
   if (lineChart) { lineChart.destroy(); lineChart = null; }
-  const uid     = parseInt(document.getElementById('member-select')?.value || activeUser);
+  const uid        = parseInt(document.getElementById('member-select')?.value || activeUser);
   const allHistory = appData?.history || [];
-  const cutoff = Date.now() / 1000 - (activeRange * 86400);
-  const history   = allHistory.filter(s => s.timestamp >= cutoff);
-  const labels  = history.map(s => formatTimestamp(s.timestamp, activeRange));
+  const cutoff     = Date.now() / 1000 - (activeRange * 86400);
+  const history    = allHistory.filter(s => s.timestamp >= cutoff);
+  const labels     = history.map(s => formatTimestamp(s.timestamp, activeRange));
   const values = history.map(s => {
     const m = s.members?.find(m => m.user_id === uid);
     return m ? (m[activeMetric] || 0) : null;
@@ -956,83 +931,127 @@ function updateLineChart() {
   renderLineChart();
 }
 
-let activePortTab = null;
+function formatTimestamp(ts, days) {
+  const d = new Date(ts * 1000);
+  const pad = n => n.toString().padStart(2,'0');
+  if (days <= 1) return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (days <= 3) return `${d.toLocaleDateString('en-GB',{weekday:'short'})} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (d.getHours() === 0) return `${pad(d.getDate())}/${pad(d.getMonth()+1)}`;
+  return `${pad(d.getHours())}:00`;
+}
+
+let portSortCol = 'rank', portSortDir = 1;
+
+function rankClass(r) {
+  if (r===1) return 'rank-1'; if (r===2) return 'rank-2'; if (r===3) return 'rank-3';
+  if (r<=10) return 'rank-top10'; if (r<=25) return 'rank-mid'; return 'rank-low';
+}
+
+function chgHtml(c) {
+  if (c===null||c===undefined) return '<span style="color:var(--muted);font-family:Share Tech Mono,monospace;font-size:0.78rem">—</span>';
+  if (c===0) return '<span style="color:var(--muted);font-family:Share Tech Mono,monospace;font-size:0.78rem">—</span>';
+  return c<0
+    ? `<span style="color:#34d399;font-family:Share Tech Mono,monospace;font-size:0.78rem">▲${Math.abs(c)}</span>`
+    : `<span style="color:#f87171;font-family:Share Tech Mono,monospace;font-size:0.78rem">▼${c}</span>`;
+}
 
 function renderPortRankings() {
   const el = document.getElementById('port-rankings-section');
   if (!el) return;
   const data = window.portData;
-  if (!data || !data.ports) {
-    el.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:1rem">Port rankings not yet available — run alliance_tracker.py to populate.</div>';
+  if (!data?.ports?.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:1rem 0">Port rankings not yet available — run alliance_tracker.py to populate.</div>';
     return;
   }
 
-  // Get all unique port names for tabs
-  const allPorts = [...new Set(data.ports.map(p => p.port_name))].sort();
-  if (!activePortTab) activePortTab = allPorts[0];
+  const ourPorts = data.ports.filter(p => p.is_our_alliance).sort((a,b) => a.rank - b.rank);
+  const top50    = ourPorts.slice(0, 50);
+  const rest     = ourPorts.slice(50);
 
-  const tabsHtml = `<div class="port-tabs">${allPorts.map(p =>
-    `<button class="port-tab ${p === activePortTab ? 'active' : ''}" onclick="switchPortTab('${p.replace(/'/g,"\'")}', this)">${p}</button>`
-  ).join('')}</div>`;
+  const rank1    = ourPorts.filter(p => p.rank===1).length;
+  const top3     = ourPorts.filter(p => p.rank<=3).length;
+  const top10    = ourPorts.filter(p => p.rank<=10).length;
+  const improved = ourPorts.filter(p => p.rank_change!==null && p.rank_change<0).length;
+  const dropped  = ourPorts.filter(p => p.rank_change!==null && p.rank_change>0).length;
+  const updated  = data.updated ? new Date(data.updated*1000).toLocaleString('en-GB') : '—';
 
-  const portRows = data.ports.filter(p => p.port_name === activePortTab)
-    .sort((a,b) => a.rank - b.rank);
+  function tableRows(rows) {
+    return rows.map(p => `<tr>
+      <td><span class="rank-pill ${rankClass(p.rank)}">${p.rank}</span></td>
+      <td><span style="margin-right:6px">${p.port_name}</span></td>
+      <td style="text-align:right">${chgHtml(p.rank_change)}</td>
+    </tr>`).join('');
+  }
 
-  const updated = data.updated ? new Date(data.updated * 1000).toLocaleString('en-GB') : '—';
-
-  const tableHtml = `
-    <table class="port-table">
+  el.innerHTML = `
+    <div class="port-summary-row">
+      <div class="port-summary-card"><div class="port-summary-label">PORTS TRACKED</div><div class="port-summary-value">${ourPorts.length}</div></div>
+      <div class="port-summary-card"><div class="port-summary-label">🥇 RANK 1</div><div class="port-summary-value" style="color:#34d399">${rank1}</div></div>
+      <div class="port-summary-card"><div class="port-summary-label">TOP 3</div><div class="port-summary-value" style="color:#34d399">${top3}</div></div>
+      <div class="port-summary-card"><div class="port-summary-label">TOP 10</div><div class="port-summary-value">${top10}</div></div>
+      <div class="port-summary-card"><div class="port-summary-label">IMPROVED</div><div class="port-summary-value" style="color:#34d399">▲ ${improved}</div></div>
+      <div class="port-summary-card"><div class="port-summary-label">DROPPED</div><div class="port-summary-value" style="color:#f87171">▼ ${dropped}</div></div>
+    </div>
+    <input style="width:100%;max-width:280px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:7px 14px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.8rem;margin-bottom:1rem;outline:none;" type="text" placeholder="🔍  Search port name…" oninput="filterPorts(this.value)" id="port-search">
+    <table class="port-table" id="port-main-table">
       <thead><tr>
-        <th>Rank</th><th>Alliance</th><th class="num">Score</th><th class="num">Change</th>
+        <th class="active-sort" onclick="sortPorts('rank',this)">RANK ↑</th>
+        <th onclick="sortPorts('port_name',this)">PORT</th>
+        <th style="text-align:right">CHANGE</th>
       </tr></thead>
-      <tbody>${portRows.map(r => {
-        const change = r.rank_change ?? null;
-        const badge = change === null ? '' :
-          change < 0 ? `<span class="rank-up">▲ ${Math.abs(change)}</span>` :
-          change > 0 ? `<span class="rank-down">▼ ${change}</span>` :
-          `<span class="rank-same">—</span>`;
-        const rankColor = r.rank === 1 ? '#ffd700' : r.rank === 2 ? '#c0c0c0' : r.rank === 3 ? '#cd7f32' : 'var(--muted)';
-        return `<tr>
-          <td><span class="port-rank-badge" style="color:${rankColor}">${r.rank}</span></td>
-          <td style="${r.is_our_alliance ? 'color:var(--gold);font-weight:600' : ''}">${r.alliance_name}${r.is_our_alliance ? ' 🏴‍☠️' : ''}</td>
-          <td class="num">${r.score?.toLocaleString() ?? '—'}</td>
-          <td class="num">${badge}</td>
-        </tr>`;
-      }).join('')}</tbody>
+      <tbody id="port-main-tbody">${tableRows(top50)}</tbody>
     </table>
-    <div style="font-size:0.75rem;color:var(--muted);margin-top:0.5rem;font-family:'Share Tech Mono',monospace;">Last updated: ${updated}</div>
+    ${rest.length > 0 ? `
+    <div class="compact-toggle" id="compact-toggle" onclick="toggleCompact()">
+      <span>📦 Show remaining ${rest.length} ports</span>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="compact-section" id="compact-section">
+      <div class="compact-grid">${rest.map(p => `
+        <div class="compact-item">
+          <span class="compact-rank" style="color:${p.rank<=10?'#34d399':p.rank<=25?'#38bdf8':'#64748b'}">${p.rank}</span>
+          <span style="flex:1;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.port_name}</span>
+          ${chgHtml(p.rank_change)}
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+    <div style="font-size:0.75rem;color:var(--muted);margin-top:0.75rem;font-family:'Share Tech Mono',monospace;">Last updated: ${updated}</div>
   `;
-
-  el.innerHTML = tabsHtml + tableHtml;
+  window._portData50   = top50;
+  window._portDataAll  = ourPorts;
 }
 
-function switchPortTab(portName, btn) {
-  activePortTab = portName;
-  document.querySelectorAll('.port-tab').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  const tableEl = document.querySelector('#port-rankings-section table');
-  const updEl   = document.querySelector('#port-rankings-section div:last-child');
-  if (!tableEl) { renderPortRankings(); return; }
+function sortPorts(col, th) {
+  if (portSortCol===col) portSortDir*=-1; else { portSortCol=col; portSortDir=1; }
+  document.querySelectorAll('.port-table th').forEach(t=>t.classList.remove('active-sort'));
+  if (th) th.classList.add('active-sort');
+  const arr = [...(window._portData50||[])];
+  arr.sort((a,b) => {
+    if (typeof a[col]==='number') return (a[col]-b[col])*portSortDir;
+    return a[col].localeCompare(b[col])*portSortDir;
+  });
+  const tbody = document.getElementById('port-main-tbody');
+  if (tbody) tbody.innerHTML = arr.map(p => `<tr>
+    <td><span class="rank-pill ${rankClass(p.rank)}">${p.rank}</span></td>
+    <td>${p.port_name}</td>
+    <td style="text-align:right">${chgHtml(p.rank_change)}</td>
+  </tr>`).join('');
+}
 
-  const data = window.portData;
-  const portRows = data.ports.filter(p => p.port_name === portName).sort((a,b) => a.rank - b.rank);
-  const updated = data.updated ? new Date(data.updated * 1000).toLocaleString('en-GB') : '—';
+function filterPorts(q) {
+  const all = window._portDataAll || [];
+  const filtered = q ? all.filter(p => p.port_name.toLowerCase().includes(q.toLowerCase())) : (window._portData50||[]);
+  const tbody = document.getElementById('port-main-tbody');
+  if (tbody) tbody.innerHTML = filtered.map(p => `<tr>
+    <td><span class="rank-pill ${rankClass(p.rank)}">${p.rank}</span></td>
+    <td>${p.port_name}</td>
+    <td style="text-align:right">${chgHtml(p.rank_change)}</td>
+  </tr>`).join('');
+}
 
-  tableEl.querySelector('tbody').innerHTML = portRows.map(r => {
-    const change = r.rank_change ?? null;
-    const badge = change === null ? '' :
-      change < 0 ? `<span class="rank-up">▲ ${Math.abs(change)}</span>` :
-      change > 0 ? `<span class="rank-down">▼ ${change}</span>` :
-      `<span class="rank-same">—</span>`;
-    const rankColor = r.rank === 1 ? '#ffd700' : r.rank === 2 ? '#c0c0c0' : r.rank === 3 ? '#cd7f32' : 'var(--muted)';
-    return `<tr>
-      <td><span class="port-rank-badge" style="color:${rankColor}">${r.rank}</span></td>
-      <td style="${r.is_our_alliance ? 'color:var(--gold);font-weight:600' : ''}">${r.alliance_name}${r.is_our_alliance ? ' 🏴‍☠️' : ''}</td>
-      <td class="num">${r.score?.toLocaleString() ?? '—'}</td>
-      <td class="num">${badge}</td>
-    </tr>`;
-  }).join('');
-  if (updEl) updEl.textContent = `Last updated: ${updated}`;
+function toggleCompact() {
+  document.getElementById('compact-toggle')?.classList.toggle('open');
+  document.getElementById('compact-section')?.classList.toggle('open');
 }
 
 function renderBarCharts(sorted) {
